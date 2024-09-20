@@ -9,7 +9,7 @@ from pytorch_msssim import ssim
 from utils import save_rgb
 
 
-def test_model (model, language_model, lm_head, testsets, device, promptify, savepath="results/"):
+def run_model (model, language_model, lm_head, testsets, device, promptify, savepath="results/"):
 
     model.eval()
     if language_model:
@@ -31,7 +31,11 @@ def test_model (model, language_model, lm_head, testsets, device, promptify, sav
             print (">>> Eval on", testset.name, testset.degradation, testset.deg_class)
 
             testset_name = testset.name
-            test_dataloader = DataLoader(testset, batch_size=1, num_workers=4, drop_last=True, shuffle=False)
+            test_dataloader = DataLoader(testset,
+                                         batch_size=1,
+                                         num_workers=4,
+                                         drop_last=True,
+                                         shuffle=False)
             psnr_dataset = []
             ssim_dataset = []
             psnr_noisy   = []

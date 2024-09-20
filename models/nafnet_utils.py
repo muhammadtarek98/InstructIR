@@ -5,12 +5,10 @@
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import math
 
 class LayerNormFunction(torch.autograd.Function):
-
     @staticmethod
     def forward(ctx, x, weight, bias, eps):
         ctx.eps = eps
@@ -36,12 +34,12 @@ class LayerNormFunction(torch.autograd.Function):
         return gx, (grad_output * y).sum(dim=3).sum(dim=2).sum(dim=0), grad_output.sum(dim=3).sum(dim=2).sum(
             dim=0), None
 
-class LayerNorm2d(nn.Module):
+class LayerNorm2d(torch.nn.Module):
 
     def __init__(self, channels, eps=1e-6):
         super(LayerNorm2d, self).__init__()
-        self.register_parameter('weight', nn.Parameter(torch.ones(channels)))
-        self.register_parameter('bias', nn.Parameter(torch.zeros(channels)))
+        self.register_parameter(name='weight',param=torch. nn.Parameter(torch.ones(channels)))
+        self.register_parameter(name='bias', param=torch.nn.Parameter(torch.zeros(channels)))
         self.eps = eps
 
     def forward(self, x):
@@ -49,9 +47,9 @@ class LayerNorm2d(nn.Module):
     
 
 
-class AvgPool2d(nn.Module):
+class AvgPool2d(torch.nn.Module):
     def __init__(self, kernel_size=None, base_size=None, auto_pad=True, fast_imp=False, train_size=None):
-        super().__init__()
+        super(AvgPool2d,self).__init__()
         self.kernel_size = kernel_size
         self.base_size = base_size
         self.auto_pad = auto_pad
@@ -82,12 +80,12 @@ class AvgPool2d(nn.Module):
             self.max_r2 = max(1, self.rs[0] * x.shape[3] // train_size[-1])
 
         if self.kernel_size[0] >= x.size(-2) and self.kernel_size[1] >= x.size(-1):
-            return F.adaptive_avg_pool2d(x, 1)
+            return torch.nn.functional.adaptive_avg_pool2d(x, 1)
 
         if self.fast_imp:  # Non-equivalent implementation but faster
             h, w = x.shape[2:]
             if self.kernel_size[0] >= h and self.kernel_size[1] >= w:
-                out = F.adaptive_avg_pool2d(x, 1)
+                out = torch.nn.functional.adaptive_avg_pool2d(x, 1)
             else:
                 r1 = [r for r in self.rs if h % r == 0][0]
                 r2 = [r for r in self.rs if w % r == 0][0]
@@ -123,7 +121,7 @@ def replace_layers(model, base_size, train_size, fast_imp, **kwargs):
             ## compound module, go inside it
             replace_layers(m, base_size, train_size, fast_imp, **kwargs)
 
-        if isinstance(m, nn.AdaptiveAvgPool2d):
+        if isinstance(m, torch.nn.AdaptiveAvgPool2d):
             pool = AvgPool2d(base_size=base_size, fast_imp=fast_imp, train_size=train_size)
             assert m.output_size == 1
             setattr(model, n, pool)

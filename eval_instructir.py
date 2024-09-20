@@ -19,7 +19,7 @@ from models import instructir
 
 from text.models import LanguageModel, LMHead
 
-from test import test_model
+from test import run_model
 
 
 def seed_everything(SEED=42):
@@ -200,5 +200,5 @@ if __name__=="__main__":
 
     test_datasets = create_testsets(TESTSETS, debug=True)
 
-    test_model (model, language_model, lm_head, test_datasets, device, promptify, savepath=SAVE_PATH)
+    run_model(model, language_model, lm_head, test_datasets, device, promptify, savepath=SAVE_PATH)
     

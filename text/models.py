@@ -1,5 +1,4 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
 from transformers import DistilBertModel, DistilBertTokenizer, AutoModel, AutoTokenizer
 import os
@@ -14,10 +13,9 @@ def mean_pooling(model_output, attention_mask):
     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
 
-class LanguageModel(nn.Module):
+class LanguageModel(torch.nn.Module):
     def __init__(self, model='distilbert-base-uncased'):
         super(LanguageModel, self).__init__()
-        
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.model = AutoModel.from_pretrained(model)
         self.model_name = model
@@ -27,20 +25,15 @@ class LanguageModel(nn.Module):
         # Freeze the pre-trained parameters (very important)
         for param in self.model.parameters():
             param.requires_grad = False
-
         # Make sure to set evaluation mode (also important)
         self.model.eval()
-
     def forward(self, text_batch):
         inputs = self.tokenizer(text_batch, padding=True, truncation=True, return_tensors="pt")
         with torch.no_grad(): # Ensure no gradients are computed for this forward pass
-
             if "clip" in self.model_name:
                 sentence_embedding = self.model.get_text_features(**inputs)
                 return sentence_embedding
-
             outputs = self.model(**inputs)
-
         if any(model in self.model_name for model in POOL_MODELS):
             sentence_embeddings = mean_pooling(outputs, inputs['attention_mask'])
             # Normalize embeddings
@@ -50,13 +43,12 @@ class LanguageModel(nn.Module):
         return sentence_embedding
     
 
-class LMHead(nn.Module):
+class LMHead(torch.nn.Module):
     def __init__(self, embedding_dim=384, hidden_dim=256, num_classes=4):
         super(LMHead, self).__init__()
-        
-        self.fc1 = nn.Linear(embedding_dim, hidden_dim)
-        #self.gelu = nn.GELU()
-        self.fc2 = nn.Linear(hidden_dim, num_classes)
+        self.fc1 = torch.nn.Linear(embedding_dim, hidden_dim)
+        #self.gelu = torch.nn.GELU()
+        self.fc2 = torch.nn.Linear(hidden_dim, num_classes)
         
     def forward(self, x):
         embd = self.fc1(x)
