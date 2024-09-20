@@ -101,7 +101,7 @@ class InstructIR(torch.nn.Module):
         _, _, h, w = x.size()
         mod_pad_h = (self.padder_size - h % self.padder_size) % self.padder_size
         mod_pad_w = (self.padder_size - w % self.padder_size) % self.padder_size
-        x = F.pad(x, (0, mod_pad_w, 0, mod_pad_h))
+        x = torch.nn.functional.pad(x, (0, mod_pad_w, 0, mod_pad_h))
         return x
 
 def create_model(input_channels = 3,
